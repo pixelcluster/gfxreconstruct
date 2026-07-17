@@ -142,12 +142,13 @@ void handle_struct_member(
         reinterpret_cast<const uint8_t*>(&struct_member) - reinterpret_cast<const uint8_t*>(&base_struct);
 
     auto out_address = offset_ptr(out_data, offset);
-    offset += vulkan_struct_deep_copy_stype(&struct_member, out_address);
+    size_t struct_size = vulkan_struct_deep_copy_stype(&struct_member, out_address);
+    offset += struct_size;
 
     if (out_data != nullptr)
     {
-        auto& out_struct_member = *reinterpret_cast<U*>(out_data + out_index * sizeof(T) + member_offset);
-        out_struct_member       = *reinterpret_cast<U*>(out_address);
+        auto *out_struct_member = reinterpret_cast<U*>(out_data + out_index * sizeof(T) + member_offset);
+        memcpy(out_struct_member, out_address, std::min(struct_size, sizeof(U)));
     }
 }
 
