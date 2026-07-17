@@ -14522,5 +14522,24 @@ void VulkanReplayConsumerBase::OverrideGetTensorMemoryRequirementsARM(
             pInfo->GetPointer(), pMemoryRequirements->GetPointer(), tensor_info->allocator_data);
     }
 }
+
+VkResult VulkanReplayConsumerBase::OverrideGetCalibratedTimestampsKHR(
+    PFN_vkGetCalibratedTimestampsKHR                            func,
+    VkResult                                                    returnValue,
+    const VulkanDeviceInfo*                                     device_info,
+    uint32_t                                                    timestampCount,
+    StructPointerDecoder<Decoded_VkCalibratedTimestampInfoKHR>* pTimestampInfos,
+    PointerDecoder<uint64_t>*                                   pTimestamps,
+    PointerDecoder<uint64_t>*                                   pMaxDeviation)
+{
+    GFXRECON_UNREFERENCED_PARAMETER(func);
+    GFXRECON_UNREFERENCED_PARAMETER(device_info);
+    GFXRECON_UNREFERENCED_PARAMETER(timestampCount);
+    GFXRECON_UNREFERENCED_PARAMETER(pTimestampInfos);
+    GFXRECON_UNREFERENCED_PARAMETER(pTimestamps);
+    GFXRECON_UNREFERENCED_PARAMETER(pMaxDeviation);
+    return returnValue;
+}
+
 GFXRECON_END_NAMESPACE(decode)
 GFXRECON_END_NAMESPACE(gfxrecon)

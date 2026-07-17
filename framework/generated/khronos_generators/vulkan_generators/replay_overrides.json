@@ -196,6 +196,7 @@
     "vkCreateDataGraphPipelinesARM": "OverrideCreateDataGraphPipelinesARM",
     "vkCreateDataGraphPipelineSessionARM": "OverrideCreateDataGraphPipelineSessionARM",
     "vkDestroyDataGraphPipelineSessionARM": "OverrideDestroyDataGraphPipelineSessionARM",
-    "vkBindDataGraphPipelineSessionMemoryARM": "OverrideBindDataGraphPipelineSessionMemoryARM"
+    "vkBindDataGraphPipelineSessionMemoryARM": "OverrideBindDataGraphPipelineSessionMemoryARM",
+    "vkGetCalibratedTimestampsKHR": "OverrideGetCalibratedTimestampsKHR"
   }
 }

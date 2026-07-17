@@ -1717,6 +1717,15 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                  uint32_t                       groupCountY,
                                  uint32_t                       groupCountZ);
 
+    VkResult
+    OverrideGetCalibratedTimestampsKHR(PFN_vkGetCalibratedTimestampsKHR                            func,
+                                       VkResult                                                    returnValue,
+                                       const VulkanDeviceInfo*                                     device_info,
+                                       uint32_t                                                    timestampCount,
+                                       StructPointerDecoder<Decoded_VkCalibratedTimestampInfoKHR>* pTimestampInfos,
+                                       PointerDecoder<uint64_t>*                                   pTimestamps,
+                                       PointerDecoder<uint64_t>*                                   pMaxDeviation);
+
     std::function<handle_create_result_t<VkPipeline>()>
     AsyncCreateGraphicsPipelines(PFN_vkCreateGraphicsPipelines                               func,
                                  VkResult                                                    returnValue,

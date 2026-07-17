@@ -5991,13 +5991,13 @@ void VulkanReplayConsumer::Process_vkGetCalibratedTimestampsKHR(
     const ApiCallInfo&                          call_info,
     args::GetCalibratedTimestampsKHR&           args)
 {
-    VkDevice in_device = MapHandle<VulkanDeviceInfo>(args.device, &CommonObjectInfoTable::GetVkDeviceInfo);
-    const VkCalibratedTimestampInfoKHR* in_pTimestampInfos = args.pTimestampInfos.GetPointer();
-    MapStructArrayHandles(args.pTimestampInfos.GetMetaStructPointer(), args.pTimestampInfos.GetLength(), GetObjectInfoTable());
-    uint64_t* out_pTimestamps = args.pTimestamps.IsNull() ? nullptr : args.pTimestamps.AllocateOutputData(args.timestampCount);
-    uint64_t* out_pMaxDeviation = args.pMaxDeviation.IsNull() ? nullptr : args.pMaxDeviation.AllocateOutputData(1, static_cast<uint64_t>(0));
+    auto in_device = GetObjectInfoTable().GetVkDeviceInfo(args.device);
 
-    VkResult replay_result = GetDeviceTable(in_device)->GetCalibratedTimestampsKHR(in_device, args.timestampCount, in_pTimestampInfos, out_pTimestamps, out_pMaxDeviation);
+    MapStructArrayHandles(args.pTimestampInfos.GetMetaStructPointer(), args.pTimestampInfos.GetLength(), GetObjectInfoTable());
+    if (args.pTimestamps.IsNull()) { args.pTimestamps.AllocateOutputData(args.timestampCount); }
+    args.pMaxDeviation.IsNull() ? nullptr : args.pMaxDeviation.AllocateOutputData(1, static_cast<uint64_t>(0));
+
+    VkResult replay_result = OverrideGetCalibratedTimestampsKHR(GetDeviceTable(in_device->handle)->GetCalibratedTimestampsKHR, args.result, in_device, args.timestampCount, &args.pTimestampInfos, &args.pTimestamps, &args.pMaxDeviation);
     CheckResult("vkGetCalibratedTimestampsKHR", args.result, replay_result, call_info);
 }
 
