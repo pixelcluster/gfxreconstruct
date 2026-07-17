@@ -53,6 +53,8 @@ struct VulkanSwapchainOptions
     util::PresentModeOption present_mode_option{ util::PresentModeOption::kCapture };
 };
 
+#define GFXRECON_VK_RESULT_ACQUIRE_DROPPED ((VkResult)INT32_MIN)
+
 class VulkanSwapchain
 {
   public:

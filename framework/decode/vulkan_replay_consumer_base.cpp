@@ -4542,7 +4542,7 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit        
     // Only attempt to filter imported semaphores if we know at least one has been imported.
     // If rendering is restricted to a specific surface, shadow semaphore and forward progress state will need to be
     // tracked.
-    if (have_imported_semaphores_ || options_.surface_index != -1)
+    if (have_imported_semaphores_ || options_.surface_index != -1 || (!shadow_semaphores_.empty()))
     {
         if (submit_info_data != nullptr)
         {
@@ -4806,7 +4806,7 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit2(PFN_vkQueueSubmit2      
     // Only attempt to filter imported semaphores if we know at least one has been imported.
     // If rendering is restricted to a specific surface, shadow semaphore and forward progress state will need to be
     // tracked.
-    if (have_imported_semaphores_ || options_.surface_index != -1)
+    if (have_imported_semaphores_ || options_.surface_index != -1 || (!shadow_semaphores_.empty()))
     {
         if (submit_info_data != nullptr)
         {
@@ -8626,8 +8626,10 @@ VkResult VulkanReplayConsumerBase::OverrideAcquireNextImageKHR(PFN_vkAcquireNext
             swapchain_info->acquired_indices[captured_index] = { (*replay_index), true };
         }
     }
-    else
+
+    if (swapchain_info->surface == VK_NULL_HANDLE || result == GFXRECON_VK_RESULT_ACQUIRE_DROPPED)
     {
+        result = original_result;
         // Track semphore and fence objects as shadow objects so that they can be ignored when they would have been
         // unsignaled (waited on).
         if (semaphore_info != nullptr)
@@ -8753,8 +8755,10 @@ VkResult VulkanReplayConsumerBase::OverrideAcquireNextImage2KHR(
             local_swapchain_info->acquired_indices[captured_index] = { (*replay_index), true };
         }
     }
-    else
+
+    if (swapchain_info->surface == VK_NULL_HANDLE || result == GFXRECON_VK_RESULT_ACQUIRE_DROPPED)
     {
+        result = original_result;
         // Track semphore and fence objects as shadow objects so that they can be ignored when they would have been
         // unsignaled (waited on).
         VulkanSemaphoreInfo* semaphore_info = object_info_table_->GetVkSemaphoreInfo(acquire_meta_info->semaphore);
@@ -9143,8 +9147,9 @@ VulkanReplayConsumerBase::OverrideQueuePresentKHR(PFN_vkQueuePresentKHR         
     }
 
     // If running with surface-index on, need to track forward progress of semaphore that have been submitted
-    if (options_.surface_index != -1)
+    if (options_.surface_index != -1 || result == GFXRECON_VK_RESULT_ACQUIRE_DROPPED)
     {
+        result = original_result;
         if (dispatched_command)
         {
             TrackSemaphoreForwardProgress(present_info_data->pWaitSemaphores, &removed_semaphores_);

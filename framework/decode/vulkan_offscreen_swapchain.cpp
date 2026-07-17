@@ -186,13 +186,7 @@ VkResult VulkanOffscreenSwapchain::AcquireNextImageKHR(VkResult                 
                                                        uint32_t*                 image_index)
 {
     *image_index = capture_image_index;
-    if (semaphore != VK_NULL_HANDLE || fence != VK_NULL_HANDLE)
-    {
-        auto it = external_sync_type_.find(device_info->handle);
-        GFXRECON_ASSERT(it != external_sync_type_.end());
-        return SignalAcquireNextImageSemaphoreFence(device_info, semaphore, fence, it->second);
-    }
-    return original_result;
+    return GFXRECON_VK_RESULT_ACQUIRE_DROPPED;
 }
 
 VkResult VulkanOffscreenSwapchain::AcquireNextImage2KHR(VkResult                         original_result,
@@ -204,14 +198,7 @@ VkResult VulkanOffscreenSwapchain::AcquireNextImage2KHR(VkResult                
                                                         uint32_t*                        image_index)
 {
     *image_index = capture_image_index;
-    if (acquire_info->semaphore != VK_NULL_HANDLE || acquire_info->fence != VK_NULL_HANDLE)
-    {
-        auto it = external_sync_type_.find(device_info->handle);
-        GFXRECON_ASSERT(it != external_sync_type_.end());
-        return SignalAcquireNextImageSemaphoreFence(
-            device_info, acquire_info->semaphore, acquire_info->fence, it->second);
-    }
-    return original_result;
+    return GFXRECON_VK_RESULT_ACQUIRE_DROPPED;
 }
 
 VkResult VulkanOffscreenSwapchain::QueuePresentKHR(VkResult                                    original_result,
@@ -254,19 +241,7 @@ VkResult VulkanOffscreenSwapchain::QueuePresentKHR(VkResult                     
         submit_info.pNext = &frame_boundary_;
     }
 
-    if (swapchain_options_.offscreen_swapchain_frame_boundary || present_info->waitSemaphoreCount > 0)
-    {
-        util::MarkInjectedCommandsHelper mark_injected_commands_helper;
-        result = device_table_->QueueSubmit(queue_info->handle, 1, &submit_info, VK_NULL_HANDLE);
-
-        if (result != VK_SUCCESS)
-        {
-            GFXRECON_LOG_ERROR("Offscreen swapchain failed to QueueSubmit on QueuePresentKHR for queue %" PRIu64,
-                               queue_info->handle);
-        }
-    }
-
-    return result;
+    return GFXRECON_VK_RESULT_ACQUIRE_DROPPED;
 }
 
 void VulkanOffscreenSwapchain::PresentImageAdHoc(const VulkanDeviceInfo*                    device_info,
