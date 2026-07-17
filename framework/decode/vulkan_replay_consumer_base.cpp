@@ -9882,6 +9882,21 @@ VkResult VulkanReplayConsumerBase::OverrideCreateRayTracingPipelinesKHR(
         for (uint32_t create_info_i = 0; create_info_i < createInfoCount; ++create_info_i)
         {
             format::HandleId pipeline_capture_id = pPipelines->GetPointer()[create_info_i];
+            bool             has_flags2          = false;
+
+            void* next = (void*)in_pCreateInfos[create_info_i].pNext;
+            while (next)
+            {
+                VkBaseOutStructure out_struct;
+                memcpy(&out_struct, next, sizeof(VkBaseOutStructure));
+                if (out_struct.sType == VK_STRUCTURE_TYPE_PIPELINE_CREATE_FLAGS_2_CREATE_INFO)
+                {
+                    VkPipelineCreateFlags2CreateInfo* flags2CreateInfo = (VkPipelineCreateFlags2CreateInfo*)next;
+                    flags2CreateInfo->flags |=
+                        VK_PIPELINE_CREATE_2_RAY_TRACING_SHADER_GROUP_HANDLE_CAPTURE_REPLAY_BIT_KHR;
+                }
+                next = out_struct.pNext;
+            }
 
             // Enable capture replay flag.
             modified_create_infos.push_back(in_pCreateInfos[create_info_i]);

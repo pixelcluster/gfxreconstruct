@@ -509,6 +509,7 @@ struct DeferredOperationKHRWrapper : public HandleWrapper<VkDeferredOperationKHR
     // Record CreateRayTracingPipelinesKHR parameters for safety.
     HandleUnwrapMemory                             handle_unwrap_memory;
     std::vector<VkRayTracingPipelineCreateInfoKHR> create_infos;
+    std::unique_ptr<uint8_t[]>                     create_info_storage;
     VkAllocationCallbacks                          allocator{};
     VkAllocationCallbacks*                         p_allocator{ nullptr };
     std::vector<VkPipeline>                        pipelines;

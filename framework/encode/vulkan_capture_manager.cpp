@@ -1664,18 +1664,39 @@ VulkanCaptureManager::OverrideCreateRayTracingPipelinesKHR(VkDevice             
     VkResult result;
     if (device_wrapper->property_feature_info.feature_rayTracingPipelineShaderGroupHandleCaptureReplay)
     {
-        auto modified_create_infos = std::make_unique<VkRayTracingPipelineCreateInfoKHR[]>(createInfoCount);
+        std::unique_ptr<uint8_t[]> create_info_storage;
+        auto modified_create_infos = vulkan_trackers::TrackStructs(pCreateInfos, createInfoCount, create_info_storage);
+
         for (uint32_t i = 0; i < createInfoCount; ++i)
         {
-            modified_create_infos[i] = pCreateInfos_unwrapped[i];
-            modified_create_infos[i].flags |= VK_PIPELINE_CREATE_RAY_TRACING_SHADER_GROUP_HANDLE_CAPTURE_REPLAY_BIT_KHR;
+            bool  found_flags2 = false;
+            void* next         = (void*)modified_create_infos[i].pNext;
+            while (next)
+            {
+                VkBaseOutStructure outStruct;
+                memcpy(&outStruct, next, sizeof(VkBaseOutStructure));
+                if (outStruct.sType == VK_STRUCTURE_TYPE_PIPELINE_CREATE_FLAGS_2_CREATE_INFO)
+                {
+                    VkPipelineCreateFlags2CreateInfo* flags2CreateInfo =
+                        reinterpret_cast<VkPipelineCreateFlags2CreateInfo*>(next);
+                    flags2CreateInfo->flags |=
+                        VK_PIPELINE_CREATE_2_RAY_TRACING_SHADER_GROUP_HANDLE_CAPTURE_REPLAY_BIT_KHR;
+                    found_flags2 = true;
+                    break;
+                }
+                next = outStruct.pNext;
+            }
+            if (!found_flags2)
+                modified_create_infos[i].flags |=
+                    VK_PIPELINE_CREATE_RAY_TRACING_SHADER_GROUP_HANDLE_CAPTURE_REPLAY_BIT_KHR;
         }
         if (deferred_operation_wrapper)
         {
+            deferred_operation_wrapper->create_info_storage = std::move(create_info_storage);
             deferred_operation_wrapper->create_infos.clear();
             deferred_operation_wrapper->create_infos.insert(deferred_operation_wrapper->create_infos.end(),
-                                                            &modified_create_infos.get()[0],
-                                                            &modified_create_infos.get()[createInfoCount]);
+                                                            modified_create_infos,
+                                                            &modified_create_infos[createInfoCount]);
             result = device_table->CreateRayTracingPipelinesKHR(device,
                                                                 deferredOperation,
                                                                 pipelineCache,
@@ -1715,7 +1736,7 @@ VulkanCaptureManager::OverrideCreateRayTracingPipelinesKHR(VkDevice             
                                                                 deferredOperation,
                                                                 pipelineCache,
                                                                 createInfoCount,
-                                                                modified_create_infos.get(),
+                                                                modified_create_infos,
                                                                 pAllocator,
                                                                 pPipelines);
         }
